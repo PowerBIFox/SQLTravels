@@ -1,4 +1,4 @@
-# SQLTravels Transport Analytics Platform
+# SQLTravels Analytics Platform
 
 ## Overview
 
