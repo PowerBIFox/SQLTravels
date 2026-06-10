@@ -1,0 +1,754 @@
+SQLTravels Transport Analytics - DAX Measures
+=================================================
+
+Assumed Table Names
+-------------------
+vrlt_fact_booking
+vrlt_fact_trip
+vrlt_fact_fuel
+vrlt_fact_maintenance
+
+vrlt_dim_date
+vrlt_dim_route
+vrlt_dim_bus
+vrlt_dim_driver
+vrlt_dim_branch
+vrlt_dim_city
+vrlt_dim_payment_mode
+vrlt_dim_channel
+vrlt_dim_demand_event
+vrlt_bridge_route_stop
+
+
+01. Executive KPIs
+------------------
+
+Total Revenue =
+SUM(vrlt_fact_booking[FareAmount])
+
+Total Bookings =
+COUNTROWS(vrlt_fact_booking)
+
+Total Passengers =
+SUM(vrlt_fact_booking[SeatsBooked])
+
+Total Trips =
+COUNTROWS(vrlt_fact_trip)
+
+Average Fare per Passenger =
+DIVIDE([Total Revenue], [Total Passengers])
+
+Average Fare per Booking =
+DIVIDE([Total Revenue], [Total Bookings])
+
+Total Operating Cost =
+[Total Fuel Cost] + [Total Maintenance Cost]
+
+Gross Profit =
+[Total Revenue] - [Total Operating Cost]
+
+Gross Profit Margin % =
+DIVIDE([Gross Profit], [Total Revenue])
+
+
+02. Booking Analytics
+---------------------
+
+Confirmed Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_fact_booking[BookingStatus] = "Confirmed"
+)
+
+Cancelled Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_fact_booking[BookingStatus] = "Cancelled"
+)
+
+No Show Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_fact_booking[BookingStatus] = "No Show"
+)
+
+Cancellation Rate =
+DIVIDE([Cancelled Bookings], [Total Bookings])
+
+No Show Rate =
+DIVIDE([No Show Bookings], [Total Bookings])
+
+Confirmed Booking % =
+DIVIDE([Confirmed Bookings], [Total Bookings])
+
+
+03. Passenger Analytics
+-----------------------
+
+Confirmed Passengers =
+CALCULATE(
+    [Total Passengers],
+    vrlt_fact_booking[BookingStatus] = "Confirmed"
+)
+
+Cancelled Passengers =
+CALCULATE(
+    [Total Passengers],
+    vrlt_fact_booking[BookingStatus] = "Cancelled"
+)
+
+No Show Passengers =
+CALCULATE(
+    [Total Passengers],
+    vrlt_fact_booking[BookingStatus] = "No Show"
+)
+
+Average Seats per Booking =
+DIVIDE([Total Passengers], [Total Bookings])
+
+
+04. Revenue Analytics
+---------------------
+
+Confirmed Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_fact_booking[BookingStatus] = "Confirmed"
+)
+
+Cancelled Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_fact_booking[BookingStatus] = "Cancelled"
+)
+
+No Show Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_fact_booking[BookingStatus] = "No Show"
+)
+
+Revenue per Booking =
+DIVIDE([Total Revenue], [Total Bookings])
+
+Revenue per Passenger =
+DIVIDE([Total Revenue], [Total Passengers])
+
+Revenue Cr =
+DIVIDE([Total Revenue], 10000000)
+
+Revenue Lakhs =
+DIVIDE([Total Revenue], 100000)
+
+
+05. Trip Operations
+-------------------
+
+Completed Trips =
+CALCULATE(
+    [Total Trips],
+    vrlt_fact_trip[TripStatus] = "Completed"
+)
+
+Delayed Trips =
+CALCULATE(
+    [Total Trips],
+    vrlt_fact_trip[TripStatus] = "Delayed"
+)
+
+Cancelled Trips =
+CALCULATE(
+    [Total Trips],
+    vrlt_fact_trip[TripStatus] = "Cancelled"
+)
+
+Trip Cancellation Rate =
+DIVIDE([Cancelled Trips], [Total Trips])
+
+Delayed Trip Rate =
+DIVIDE([Delayed Trips], [Total Trips])
+
+Average Delay Minutes =
+AVERAGE(vrlt_fact_trip[DelayMinutes])
+
+On-Time Trips =
+CALCULATE(
+    [Total Trips],
+    vrlt_fact_trip[DelayMinutes] <= 15
+)
+
+On-Time Performance % =
+DIVIDE([On-Time Trips], [Total Trips])
+
+Revenue per Trip =
+DIVIDE([Total Revenue], [Total Trips])
+
+Passengers per Trip =
+DIVIDE([Total Passengers], [Total Trips])
+
+
+06. Occupancy Analytics
+-----------------------
+
+Total Seat Capacity =
+SUMX(
+    vrlt_fact_trip,
+    RELATED(vrlt_dim_bus[Capacity])
+)
+
+Occupancy % =
+DIVIDE([Total Passengers], [Total Seat Capacity])
+
+Available Seats =
+[Total Seat Capacity] - [Total Passengers]
+
+High Occupancy Trips =
+COUNTROWS(
+    FILTER(
+        VALUES(vrlt_fact_trip[TripID]),
+        [Occupancy %] >= 0.80
+    )
+)
+
+Sold Out Trips =
+COUNTROWS(
+    FILTER(
+        VALUES(vrlt_fact_trip[TripID]),
+        [Occupancy %] >= 0.95
+    )
+)
+
+Low Occupancy Trips =
+COUNTROWS(
+    FILTER(
+        VALUES(vrlt_fact_trip[TripID]),
+        [Occupancy %] < 0.50
+    )
+)
+
+
+07. Fuel Analytics
+------------------
+
+Total Fuel Litres =
+SUM(vrlt_fact_fuel[LitresFilled])
+
+Total Fuel Cost =
+SUM(vrlt_fact_fuel[FuelCost])
+
+Average Fuel Rate =
+DIVIDE([Total Fuel Cost], [Total Fuel Litres])
+
+Fuel Transactions =
+COUNTROWS(vrlt_fact_fuel)
+
+Average Litres per Fuel Transaction =
+DIVIDE([Total Fuel Litres], [Fuel Transactions])
+
+Fuel Cost per Trip =
+DIVIDE([Total Fuel Cost], [Total Trips])
+
+Fuel Cost per Passenger =
+DIVIDE([Total Fuel Cost], [Total Passengers])
+
+Fuel Cost Lakhs =
+DIVIDE([Total Fuel Cost], 100000)
+
+Fuel Cost Cr =
+DIVIDE([Total Fuel Cost], 10000000)
+
+
+08. Maintenance Analytics
+-------------------------
+
+Total Maintenance Cost =
+SUM(vrlt_fact_maintenance[MaintenanceCost])
+
+Total Downtime Hours =
+SUM(vrlt_fact_maintenance[DowntimeHours])
+
+Maintenance Events =
+COUNTROWS(vrlt_fact_maintenance)
+
+Average Maintenance Cost =
+DIVIDE([Total Maintenance Cost], [Maintenance Events])
+
+Average Downtime Hours =
+DIVIDE([Total Downtime Hours], [Maintenance Events])
+
+Maintenance Cost per Bus =
+DIVIDE(
+    [Total Maintenance Cost],
+    DISTINCTCOUNT(vrlt_dim_bus[BusID])
+)
+
+Maintenance Cost per Trip =
+DIVIDE([Total Maintenance Cost], [Total Trips])
+
+Maintenance Cost per Passenger =
+DIVIDE([Total Maintenance Cost], [Total Passengers])
+
+Maintenance Cost Lakhs =
+DIVIDE([Total Maintenance Cost], 100000)
+
+Maintenance Cost Cr =
+DIVIDE([Total Maintenance Cost], 10000000)
+
+
+09. Profitability Analytics
+---------------------------
+
+Operating Cost per Trip =
+DIVIDE([Total Operating Cost], [Total Trips])
+
+Operating Cost per Passenger =
+DIVIDE([Total Operating Cost], [Total Passengers])
+
+Operating Cost per Booking =
+DIVIDE([Total Operating Cost], [Total Bookings])
+
+Gross Profit per Trip =
+DIVIDE([Gross Profit], [Total Trips])
+
+Gross Profit per Passenger =
+DIVIDE([Gross Profit], [Total Passengers])
+
+Gross Profit Cr =
+DIVIDE([Gross Profit], 10000000)
+
+Operating Cost Cr =
+DIVIDE([Total Operating Cost], 10000000)
+
+
+10. Route Analytics
+-------------------
+
+Routes Operated =
+DISTINCTCOUNT(vrlt_dim_route[RouteID])
+
+Revenue per Route =
+DIVIDE([Total Revenue], [Routes Operated])
+
+Passengers per Route =
+DIVIDE([Total Passengers], [Routes Operated])
+
+Trips per Route =
+DIVIDE([Total Trips], [Routes Operated])
+
+Route Profit =
+[Total Revenue] - [Total Operating Cost]
+
+Route Profit Margin % =
+DIVIDE([Route Profit], [Total Revenue])
+
+Average Route Distance =
+AVERAGE(vrlt_dim_route[DistanceKM])
+
+Total Scheduled Route KM =
+SUMX(
+    vrlt_fact_trip,
+    RELATED(vrlt_dim_route[DistanceKM])
+)
+
+Revenue per KM =
+DIVIDE([Total Revenue], [Total Scheduled Route KM])
+
+Fuel Cost per KM =
+DIVIDE([Total Fuel Cost], [Total Scheduled Route KM])
+
+
+11. Fleet Analytics
+-------------------
+
+Total Buses =
+DISTINCTCOUNT(vrlt_dim_bus[BusID])
+
+Active Buses =
+CALCULATE(
+    DISTINCTCOUNT(vrlt_dim_bus[BusID]),
+    vrlt_dim_bus[OperationalStatus] = "Active"
+)
+
+Trips per Bus =
+DIVIDE([Total Trips], [Total Buses])
+
+Revenue per Bus =
+DIVIDE([Total Revenue], [Total Buses])
+
+Passengers per Bus =
+DIVIDE([Total Passengers], [Total Buses])
+
+Maintenance Cost per Active Bus =
+DIVIDE([Total Maintenance Cost], [Active Buses])
+
+Fuel Cost per Bus =
+DIVIDE([Total Fuel Cost], [Total Buses])
+
+Average Bus Capacity =
+AVERAGE(vrlt_dim_bus[Capacity])
+
+Fleet Utilization Index =
+DIVIDE([Total Trips], [Active Buses])
+
+
+12. Driver Analytics
+--------------------
+
+Total Drivers =
+DISTINCTCOUNT(vrlt_dim_driver[DriverID])
+
+Active Drivers =
+CALCULATE(
+    DISTINCTCOUNT(vrlt_dim_driver[DriverID]),
+    vrlt_dim_driver[EmploymentStatus] = "Active"
+)
+
+Trips per Driver =
+DIVIDE([Total Trips], [Total Drivers])
+
+Revenue per Driver =
+DIVIDE([Total Revenue], [Total Drivers])
+
+Passengers per Driver =
+DIVIDE([Total Passengers], [Total Drivers])
+
+Average Driver Rating =
+AVERAGE(vrlt_dim_driver[DriverRating])
+
+Average Safety Score =
+AVERAGE(vrlt_dim_driver[SafetyScore])
+
+Average Fuel Efficiency Score =
+AVERAGE(vrlt_dim_driver[FuelEfficiencyScore])
+
+Average Driver Experience =
+AVERAGE(vrlt_dim_driver[ExperienceYears])
+
+
+13. Branch Analytics
+--------------------
+
+Total Branches =
+DISTINCTCOUNT(vrlt_dim_branch[BranchID])
+
+Operational Hubs =
+CALCULATE(
+    DISTINCTCOUNT(vrlt_dim_branch[BranchID]),
+    vrlt_dim_branch[IsOperationalHub] = "Yes"
+)
+
+Revenue per Branch =
+DIVIDE([Total Revenue], [Total Branches])
+
+Bookings per Branch =
+DIVIDE([Total Bookings], [Total Branches])
+
+Trips per Branch =
+DIVIDE([Total Trips], [Total Branches])
+
+Passengers per Branch =
+DIVIDE([Total Passengers], [Total Branches])
+
+
+14. Payment Mode Analytics
+--------------------------
+
+Digital Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_dim_payment_mode[IsDigital] = "Yes"
+)
+
+Digital Revenue % =
+DIVIDE([Digital Revenue], [Total Revenue])
+
+Cash Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_dim_payment_mode[PaymentMode] = "Cash"
+)
+
+UPI Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_dim_payment_mode[PaymentMode] = "UPI"
+)
+
+UPI Revenue % =
+DIVIDE([UPI Revenue], [Total Revenue])
+
+Card Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_dim_payment_mode[PaymentCategory] = "Card"
+)
+
+Wallet Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_dim_payment_mode[PaymentMode] = "Wallet"
+)
+
+Cash Revenue % =
+DIVIDE([Cash Revenue], [Total Revenue])
+
+
+15. Booking Channel Analytics
+-----------------------------
+
+App Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_dim_channel[BookingChannel] = "Mobile App"
+)
+
+Website Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_dim_channel[BookingChannel] = "Website"
+)
+
+Counter Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_dim_channel[BookingChannel] = "Counter"
+)
+
+Agent Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_dim_channel[BookingChannel] = "Agent"
+)
+
+Digital Channel Bookings =
+CALCULATE(
+    [Total Bookings],
+    vrlt_dim_channel[IsDigital] = "Yes"
+)
+
+Digital Channel Booking % =
+DIVIDE([Digital Channel Bookings], [Total Bookings])
+
+Digital Channel Revenue =
+CALCULATE(
+    [Total Revenue],
+    vrlt_dim_channel[IsDigital] = "Yes"
+)
+
+Digital Channel Revenue % =
+DIVIDE([Digital Channel Revenue], [Total Revenue])
+
+
+16. Time Intelligence
+---------------------
+
+Revenue YTD =
+TOTALYTD(
+    [Total Revenue],
+    vrlt_dim_date[Date]
+)
+
+Passengers YTD =
+TOTALYTD(
+    [Total Passengers],
+    vrlt_dim_date[Date]
+)
+
+Bookings YTD =
+TOTALYTD(
+    [Total Bookings],
+    vrlt_dim_date[Date]
+)
+
+Trips YTD =
+TOTALYTD(
+    [Total Trips],
+    vrlt_dim_date[Date]
+)
+
+Revenue Previous Year =
+CALCULATE(
+    [Total Revenue],
+    SAMEPERIODLASTYEAR(vrlt_dim_date[Date])
+)
+
+Revenue YoY Growth =
+[Total Revenue] - [Revenue Previous Year]
+
+Revenue YoY Growth % =
+DIVIDE([Revenue YoY Growth], [Revenue Previous Year])
+
+Passengers Previous Year =
+CALCULATE(
+    [Total Passengers],
+    SAMEPERIODLASTYEAR(vrlt_dim_date[Date])
+)
+
+Passengers YoY Growth =
+[Total Passengers] - [Passengers Previous Year]
+
+Passengers YoY Growth % =
+DIVIDE([Passengers YoY Growth], [Passengers Previous Year])
+
+Bookings Previous Year =
+CALCULATE(
+    [Total Bookings],
+    SAMEPERIODLASTYEAR(vrlt_dim_date[Date])
+)
+
+Bookings YoY Growth =
+[Total Bookings] - [Bookings Previous Year]
+
+Bookings YoY Growth % =
+DIVIDE([Bookings YoY Growth], [Bookings Previous Year])
+
+
+17. Booking Date Analytics
+--------------------------
+
+Bookings by Booking Date =
+CALCULATE(
+    [Total Bookings],
+    USERELATIONSHIP(
+        vrlt_fact_booking[BookingDateID],
+        vrlt_dim_date[DateID]
+    )
+)
+
+Revenue by Booking Date =
+CALCULATE(
+    [Total Revenue],
+    USERELATIONSHIP(
+        vrlt_fact_booking[BookingDateID],
+        vrlt_dim_date[DateID]
+    )
+)
+
+Passengers by Booking Date =
+CALCULATE(
+    [Total Passengers],
+    USERELATIONSHIP(
+        vrlt_fact_booking[BookingDateID],
+        vrlt_dim_date[DateID]
+    )
+)
+
+Average Advance Booking Days =
+AVERAGEX(
+    vrlt_fact_booking,
+    VAR BookingDate =
+        DATE(
+            INT(vrlt_fact_booking[BookingDateID] / 10000),
+            INT(MOD(vrlt_fact_booking[BookingDateID], 10000) / 100),
+            MOD(vrlt_fact_booking[BookingDateID], 100)
+        )
+    VAR TravelDate =
+        DATE(
+            INT(vrlt_fact_booking[TravelDateID] / 10000),
+            INT(MOD(vrlt_fact_booking[TravelDateID], 10000) / 100),
+            MOD(vrlt_fact_booking[TravelDateID], 100)
+        )
+    RETURN
+        DATEDIFF(BookingDate, TravelDate, DAY)
+)
+
+
+18. KPI Status Measures
+-----------------------
+
+Revenue KPI Status =
+SWITCH(
+    TRUE(),
+    [Revenue YoY Growth %] >= 0.15, "Excellent",
+    [Revenue YoY Growth %] >= 0.05, "Good",
+    [Revenue YoY Growth %] >= 0, "Stable",
+    "Declining"
+)
+
+Occupancy KPI Status =
+SWITCH(
+    TRUE(),
+    [Occupancy %] >= 0.85, "Excellent",
+    [Occupancy %] >= 0.70, "Good",
+    [Occupancy %] >= 0.55, "Average",
+    "Poor"
+)
+
+Delay KPI Status =
+SWITCH(
+    TRUE(),
+    [On-Time Performance %] >= 0.85, "Excellent",
+    [On-Time Performance %] >= 0.70, "Good",
+    [On-Time Performance %] >= 0.55, "Average",
+    "Poor"
+)
+
+Profitability KPI Status =
+SWITCH(
+    TRUE(),
+    [Gross Profit Margin %] >= 0.30, "Excellent",
+    [Gross Profit Margin %] >= 0.20, "Good",
+    [Gross Profit Margin %] >= 0.10, "Average",
+    "Weak"
+)
+
+
+19. Display Unit Helper Measures
+--------------------------------
+
+Total Revenue Cr =
+DIVIDE([Total Revenue], 10000000)
+
+Gross Profit Cr =
+DIVIDE([Gross Profit], 10000000)
+
+Total Operating Cost Cr =
+DIVIDE([Total Operating Cost], 10000000)
+
+Total Fuel Cost Lakhs =
+DIVIDE([Total Fuel Cost], 100000)
+
+Total Maintenance Cost Lakhs =
+DIVIDE([Total Maintenance Cost], 100000)
+
+Revenue per Route Lakhs =
+DIVIDE([Revenue per Route], 100000)
+
+Revenue per Bus Lakhs =
+DIVIDE([Revenue per Bus], 100000)
+
+
+20. Recommended Display Folders
+-------------------------------
+
+01 Executive KPIs
+02 Booking Analytics
+03 Passenger Analytics
+04 Revenue Analytics
+05 Trip Operations
+06 Occupancy Analytics
+07 Fuel Analytics
+08 Maintenance Analytics
+09 Profitability Analytics
+10 Route Analytics
+11 Fleet Analytics
+12 Driver Analytics
+13 Branch Analytics
+14 Payment Mode Analytics
+15 Booking Channel Analytics
+16 Time Intelligence
+17 Booking Date Analytics
+18 KPI Status
+19 Display Unit Helpers
+
+
+Notes
+-----
+
+1. Use vrlt_dim_date[DateID] -> vrlt_fact_booking[TravelDateID] as the active relationship.
+2. Keep vrlt_dim_date[DateID] -> vrlt_fact_booking[BookingDateID] inactive.
+3. Use USERELATIONSHIP measures for Booking Date analysis.
+4. Keep dimensions filtering facts with single-direction relationships.
+5. Avoid active fact-to-fact relationships unless strictly needed.
+6. Format percentage measures as Percentage.
+7. Format amount measures using Indian units: Lakhs and Crores.
