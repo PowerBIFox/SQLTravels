@@ -70,26 +70,27 @@ This project addresses key business questions such as:
 
 ### Dimension Tables
 
-* vrlt_dim_branch
-* vrlt_dim_bus
-* vrlt_dim_channel
-* vrlt_dim_city
-* vrlt_dim_date
-* vrlt_dim_demand_event
-* vrlt_dim_driver
-* vrlt_dim_payment_mode
-* vrlt_dim_route
+* sqlt_dim_branch
+* sqlt_dim_bus
+* sqlt_dim_channel
+* sqlt_dim_city
+* sqlt_dim_date
+* sqlt_dim_demand_event
+* sqlt_dim_driver
+* sqlt_dim_payment_mode
+* sqlt_dim_route
 
 ### Bridge Table
 
-* vrlt_bridge_route_stop
+* sqlt_bridge_route_stop
 
 ### Fact Tables
 
-* vrlt_fact_booking
-* vrlt_fact_trip
-* vrlt_fact_fuel
-* vrlt_fact_maintenance
+* sqlt_fact_booking
+* sqlt_fact_trip
+* sqlt_fact_fuel
+* sqlt_fact_maintenance
+
 
 ---
 
